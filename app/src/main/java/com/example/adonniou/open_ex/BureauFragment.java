@@ -40,7 +40,7 @@ import java.util.List;
  * Simple fragment containing only a TextView. Used by TextPagerAdapter to create
  * tutorial-style pages for apps.
  */
-public class BureauFragment extends Fragment implements SensorEventListener {
+public class BureauFragment extends Fragment {
 
     // Contains the text that will be displayed by this Fragment
     String mText;
@@ -60,7 +60,7 @@ public class BureauFragment extends Fragment implements SensorEventListener {
     private TextView mTextView;
     private static final String TAG = "Frag_bureau";
 
-    private GLSurfaceView mGLView;
+    private MyGLSurfaceView mGLView;
 
     static private Sensor mAccelerometer;
     static private Sensor mGravity;
@@ -84,76 +84,12 @@ public class BureauFragment extends Fragment implements SensorEventListener {
     public BureauFragment() {
     }
 
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-
-        Log.i(TAG, "Sensor name: " + event.sensor.getName());
-        Log.i(TAG, "Time_event: " + event.timestamp);
-        //for (int d = 0; d < event.values.length; d++) {
-            //Log.i(TAG, event.sensor.getVendor()+": "+event.values[d]);
-        //}
-    }
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        //Log.i (TAG, "Sensor Accuracy String: "+sensor.getStringType());
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI);
-        //mSensorManager.registerListener(this, mMagneticField, SensorManager.SENSOR_DELAY_UI);
-        //mSensorManager.registerListener(this, mGravity, SensorManager.SENSOR_DELAY_UI);//marche pas sur tab
-        //mSensorManager.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_UI);//marche pas sur tab
-        //mSensorManager.registerListener(this, mLinearAcceleration, SensorManager.SENSOR_DELAY_UI);//marche pas sur tab
-        //mSensorManager.registerListener(this, mRotationVector, SensorManager.SENSOR_DELAY_UI);//marche pas sur tab
-        //mSensorManager.registerListener(this, mOrientation,SensorManager.SENSOR_DELAY_UI);
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        mSensorManager.unregisterListener(this);
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
         // Before initializing the textView, check if any arguments were provided via setArguments.
 
-     mSensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
-
-        // List of Sensors Available
-        List<Sensor> msensorList = mSensorManager.getSensorList(Sensor.TYPE_ALL);
-
-        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        //mMagneticField=mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        //mGravity = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
-        //mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        //mLinearAcceleration = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        //mRotationVector = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-        //mOrientation = mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
-
-       // mOrientation= mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
-
-        // float m_result[]=mSensorManager.getOrientation(m_rotationMatrix,m_orientation);
-
-        //Log.i(TAG,"azimuth: "+m_result[0]);
-        //Log.i(TAG,"pith: "+m_result[1]);
-        //Log.i(TAG,"roll_angle: "+m_result[2]);
-
-        //mMagneticField = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        //mProximity = mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-        //mPressure = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
-        //mLight = mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
-
-        for (int k=0;k<msensorList.size();k++){
-            Log.i(TAG, "Sensor: " + msensorList.get(k).getName());
-        }
-        //Log.i (TAG, "Sensor CreateView String: "+mOrientation.getStringType());
-        //Log.i (TAG, "azimuth_angle: "+event.values[0]);
-        //Log.i (TAG, "pitch_angle: "+event.values[1]);
-        //Log.i (TAG, "roll_angle: "+event.values[2])
 
         processArguments();
 fa=super.getActivity();
@@ -161,6 +97,7 @@ fa=super.getActivity();
         //View layout = inflater.inflate(R.layout.bureaulayout, container, false);
 
         mGLView = new MyGLSurfaceView(getActivity());
+
         View layout =mGLView;
 
        // final ImageButton mImageButton= (ImageButton) layout.findViewById(R.id.lauchscan);

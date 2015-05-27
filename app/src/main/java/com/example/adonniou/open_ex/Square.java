@@ -69,6 +69,7 @@ public class Square implements SensorEventListener {
                 squareCoords.length * 4);
         bb.order(ByteOrder.nativeOrder());
         vertexBuffer = bb.asFloatBuffer();
+
         vertexBuffer.put(squareCoords);
         vertexBuffer.position(0);
 

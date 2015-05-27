@@ -147,7 +147,7 @@ public class MainActivity extends FragmentActivity {
 
         if(Read_log(this)==null)
         {
-            showDialog();
+        //    showDialog();
         }
 
     }
