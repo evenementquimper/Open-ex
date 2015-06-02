@@ -34,7 +34,7 @@ import java.util.List;
 public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListener {
 
     static private Sensor mAccelerometer;
-    static private Sensor mGravity;
+    //static private Sensor mGravity;
     static private Sensor mGyroscope;
     static private Sensor mLinearAcceleration;
     static private Sensor mRotationVector;
@@ -63,7 +63,7 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
         List<Sensor> msensorList = mSensorManager.getSensorList(Sensor.TYPE_ALL);
 
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        //mMagneticField=mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        mMagneticField=mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         //mGravity = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
         //mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         //mLinearAcceleration = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
@@ -86,8 +86,10 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
         for (int k=0;k<msensorList.size();k++){
             Log.i(TAG, "Sensor: " + msensorList.get(k).getName());
         }
+
+           //SensorManager.SENSOR_DELAY_UI
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI);
-        //mSensorManager.registerListener(this, mMagneticField, SensorManager.SENSOR_DELAY_UI);
+        mSensorManager.registerListener(this, mMagneticField, SensorManager.SENSOR_DELAY_UI);
         //mSensorManager.registerListener(this, mGravity, SensorManager.SENSOR_DELAY_UI);//marche pas sur ma tab
         //mSensorManager.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_UI);//marche pas sur ma tab
         //mSensorManager.registerListener(this, mLinearAcceleration, SensorManager.SENSOR_DELAY_UI);//marche pas sur ma tab
@@ -100,11 +102,14 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
     private float mPreviousX;
     private float mPreviousY;
 
+    float[] mGravity;
+    float[] mGeomagnetic;
+
     @Override
     public void onResume() {
         super.onResume();
-        //mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI);
-        //mSensorManager.registerListener(this, mMagneticField, SensorManager.SENSOR_DELAY_UI);
+        mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI);
+        mSensorManager.registerListener(this, mMagneticField, SensorManager.SENSOR_DELAY_UI);
         //mSensorManager.registerListener(this, mGravity, SensorManager.SENSOR_DELAY_UI);//marche pas sur tab
         //mSensorManager.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_UI);//marche pas sur tab
         //mSensorManager.registerListener(this, mLinearAcceleration, SensorManager.SENSOR_DELAY_UI);//marche pas sur tab
@@ -169,6 +174,41 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
         //Log.i(TAG, "Sensor name: " + event.sensor.getName());
         //Log.i(TAG, "Time_event: " + event.timestamp);
 
+        //switch (event.sensor.getType()) {
+            //case Sensor.TYPE_ACCELEROMETER:
+               // System.arraycopy(event.values, 0, 0, 0, 3);
+              //  break;
+            //case Sensor.TYPE_MAGNETIC_FIELD:
+              //  System.arraycopy(event.values, 0, 0, 0, 3);
+              //  break;
+
+
+            //default:
+              //  return;
+
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
+            mGravity = event.values;
+        if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
+            mGeomagnetic = event.values;
+        if (mGravity != null && mGeomagnetic != null) {
+            float R[] = new float[9];
+            float I[] = new float[9];
+            boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
+            if (success) {
+                float orientation[] = new float[3];
+                SensorManager.getOrientation(R, orientation);
+
+                //recup azimut
+                float azimut = orientation[0]; // orientation contains: azimut, pitch and roll
+                Log.i(TAG, "Azimut: "+azimut);
+                //Log.i(TAG,"Pitch: "+orientation[1]);
+                //Log.i(TAG,"roll: "+orientation[2]);
+            }
+        }
+
+        //}
+//Log.i(TAG, "Event timestamp: "+event.timestamp); //ex:1249672200000 nanosecondes soit 124,967.. secondes
+       // Log.i(TAG, "grav"+event.values[2]);
         float x=event.values[0];
         float y=event.values[1];
         float z=event.values[2];
