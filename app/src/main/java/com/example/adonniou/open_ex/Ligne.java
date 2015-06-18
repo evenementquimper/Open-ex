@@ -44,8 +44,8 @@ public class Ligne {
              // bottom right
     };
 
-
-    float color[] = { 0.0f, 1.0f, 0.0f, 1.0f };
+    float color[] = { 0.2f, 0.709803922f, 0.898039216f, 1.0f };
+   // float color[] = { 0.0f, 1.0f, 0.0f, 1.0f };
 
     /**
      * Sets up the drawing object data for use in an OpenGL ES context.

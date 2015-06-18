@@ -108,7 +108,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
 
 
-        gl.glRotatef(mAngle, 0.0f, 0.0f, 1.0f);
+        //gl.glRotatef(mAngle, 0.0f, 0.0f, 1.0f);
 
         // Draw triangle
         mTriangle.draw(gl);

@@ -33,8 +33,8 @@ public class Triangle {
     static float triangleCoords[] = {
             // in counterclockwise order:
             0.0f,  0.622008459f, 0.0f,// top
-           -0.5f, -0.311004243f, 0.0f,// bottom left
-            0.5f, -0.311004243f, 0.0f // bottom right
+           -0.2f, -0.211004243f, 0.0f,// bottom left
+            0.2f, -0.211004243f, 0.0f // bottom right
     };
 
     float color[] = { 0.63671875f, 0.76953125f, 0.22265625f, 0.0f };
