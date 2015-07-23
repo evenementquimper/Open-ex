@@ -23,8 +23,15 @@ import android.hardware.SensorManager;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.SurfaceHolder;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import javax.microedition.khronos.opengles.GL10;
 
 /**
  * A view container where OpenGL ES graphics can be drawn on screen.
@@ -45,18 +52,22 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
     static private Sensor mLight;
     SensorManager mSensorManager;
 
+    private static Map<SensorEvent, String> EventTable = new HashMap<SensorEvent, String>();
+
     private static final String TAG = "EDroide";
 
-    private final MyGLRenderer mRenderer;
+    private MyGLRenderer mRenderer;
+    private MyGLRenderer myGLRenderer;
 
     public MyGLSurfaceView(Context context) {
         super(context);
+        EventTable.clear();
 
         // Set the Renderer for drawing on the GLSurfaceView
         mRenderer = new MyGLRenderer();
         setRenderer(mRenderer);
 
-        mRenderer.setmCamerDist(-5);
+        mRenderer.setmCamerDist(-7);
 
         mSensorManager = (SensorManager) this.getContext().getSystemService(Context.SENSOR_SERVICE);
         // Render the view only when there is a change in the drawing data
@@ -84,7 +95,7 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
         //mLight = mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
 
         for (int k=0;k<msensorList.size();k++){
-            Log.i(TAG, "Sensor: " + msensorList.get(k).getName());
+           // Log.i(TAG, "Sensor: " + msensorList.get(k).getName());
         }
 
            //SensorManager.SENSOR_DELAY_UI
@@ -130,11 +141,14 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
         // and other input controls. In this case, we are only
         // interested in events where the touch position changed.
 
+
+
+
         float x = e.getX();
         float y = e.getY();
 
-        Log.i(TAG,"Coord x: "+x);
-        Log.i(TAG,"Coord y: "+y);
+        //Log.i(TAG,"Coord x: "+x);
+        //Log.i(TAG,"Coord y: "+y);
 
 
         switch (e.getAction()) {
@@ -143,8 +157,36 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
                 float dx = x - mPreviousX;
                 float dy = y - mPreviousY;
 
+                float[] vertices = mRenderer.getVertices();
+                int tailletab=vertices.length;
+
+                float[] vertices2 = new float[vertices.length];
+
+                for (int i=0;i<vertices.length;i++)
+                {
+                   // Log.i(TAG,i+" Vertice: "+vertices[i]);
+                    if(vertices[i]<=0)
+                    {
+                        vertices2[i]=vertices[i]+0.1f;
+                    }
+                    if(vertices[i]>0)
+                    {
+                        vertices2[i]=vertices[i]-0.11f;
+                    }
+
+                }
+                vertices=vertices2;
 
 
+                //myGLRenderer = new MyGLRenderer();
+                //myGLRenderer.setVertices(vertices2);
+                //setRenderer(myGLRenderer);
+                mRenderer.setVertices(vertices2);
+
+                //this.setRenderer(mRenderer);
+
+                //mRenderer.onDrawFrame();
+//this.refreshDrawableState();
                 // reverse direction of rotation above the mid-line
                 if (y > getHeight() / 2) {
                     dx = dx * -1 ;
@@ -154,18 +196,19 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
                 if (x < getWidth() / 2) {
                     dy = dy * -1 ;
                 }
-                mRenderer.setMtouchx(x/1000);
-                mRenderer.setMtouchy(y/1000);
+                mRenderer.setMtouchx(x / 1000);
+                mRenderer.setMtouchy(y / 1000);
                 mRenderer.setAngle(
                         mRenderer.getAngle() +
                                 ((dx + dy) * TOUCH_SCALE_FACTOR));  // = 180.0f / 320
+
+
                 requestRender();
         }
 
         mPreviousX = x;
         mPreviousY = y;
 
-        // setRenderer(mSimpleRenderer);
         return true;
     }
 
@@ -181,6 +224,26 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
             //case Sensor.TYPE_MAGNETIC_FIELD:
               //  System.arraycopy(event.values, 0, 0, 0, 3);
               //  break;
+        //récupérer le tableau de coordonnées
+        float [] vert = mRenderer.getVertices();
+        float [] vert2 = new float [vert.length+3];
+        Log.i(TAG, "Long vertices: "+vert.length);
+        vert2=vert;
+        //Utiliation des valeurs du dernier point
+        float x_vert = vert [vert.length-2];
+        float y_vert = vert [vert.length-1];
+        float z_vert = vert [vert.length];
+
+        //Calcul du nouveau point
+        vert2[vert.length+1]=x_vert+1.0f;
+        vert2[vert.length+2]=y_vert+1.0f;
+        vert2[vert.length+3]=z_vert+1.0f;
+
+        //Ajouter au vertice le point calcul
+        mRenderer.setVertices(vert2);
+
+        //Ajouter le sensoreven à la table des event
+        mRenderer.getEventTable().put(event,"");
 
 
             //default:
@@ -195,12 +258,13 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
             float I[] = new float[9];
             boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
             if (success) {
+
                 float orientation[] = new float[3];
                 SensorManager.getOrientation(R, orientation);
 
                 //recup azimut
                 float azimut = orientation[0]; // orientation contains: azimut, pitch and roll
-                Log.i(TAG, "Azimut: "+azimut);
+               // Log.i(TAG, "Azimut: "+azimut);
                 //Log.i(TAG,"Pitch: "+orientation[1]);
                 //Log.i(TAG,"roll: "+orientation[2]);
             }

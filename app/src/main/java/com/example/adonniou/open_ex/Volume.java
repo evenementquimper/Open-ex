@@ -8,6 +8,8 @@ import android.hardware.SensorManager;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -15,6 +17,11 @@ import javax.microedition.khronos.opengles.GL10;
  * Created by adonniou on 18/05/15.
  */
 public class Volume {
+
+    private static Map<SensorEvent, String> EventTable = new HashMap<SensorEvent, String>();
+
+
+
     private FloatBuffer vertexBuffer;  // Buffer for vertex-array
     private int numFaces = 6;
 
@@ -99,6 +106,15 @@ public class Volume {
         }
         //gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
         //gl.glDisable(GL10.GL_CULL_FACE);
+    }
+
+    public Map<SensorEvent, String> getEventTable() {
+        return EventTable;
+    }
+
+    public void setEventTable(Map<SensorEvent, String> eventTable) {
+        EventTable = eventTable;
+
     }
 
 }

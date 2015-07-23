@@ -34,19 +34,6 @@ public class Square implements SensorEventListener {
 
     private final FloatBuffer vertexBuffer;
     private final ShortBuffer drawListBuffer;
-
-
-    static private Sensor mAccelerometer;
-    static private Sensor mGravity;
-    static private Sensor mGyroscope;
-    static private Sensor mLinearAcceleration;
-    static private Sensor mRotationVector;
-    static private Sensor mOrientation;
-    static private Sensor mMagneticField;
-    static private Sensor mProximity;
-    static private Sensor mPressure;
-    static private Sensor mLight;
-    SensorManager mSensorManager;
     // number of coordinates per vertex in this array
     static final int COORDS_PER_VERTEX = 3;
     static float squareCoords[] = {
