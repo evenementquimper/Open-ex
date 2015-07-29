@@ -17,30 +17,30 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:id="@+id/fetch_action"
-        android:showAsAction="ifRoom|withText"
-        android:title="@string/fetch_text"
-        android:visible="true"/>
-    <item android:id="@+id/clear_action"
-        android:showAsAction="ifRoom|withText"
-        android:title="@string/clear_text" />
-    <item android:id="@+id/usb_item"
-        android:showAsAction="ifRoom"
-        android:icon="@drawable/ic_action_device_usb"
-        android:title="usb" />
-  <item android:id="@+id/bureau"
-        android:title="@string/login_text"
-        android:showAsAction="ifRoom"
-        android:visible="true"
-        android:icon="@drawable/ic_action_navigation_menu">
 
-    <menu>
-          <item
-          android:id="@+id/newlog"
-          android:title="@string/login_text"
-          android:showAsAction="ifRoom|withText"
-          />
-          </menu>
+    android:title="@string/fetch_text"
+    android:visible="true"/>
+<item android:id="@+id/clear_action"
+
+    android:title="@string/clear_text" />
+<item android:id="@+id/usb_item"
+
+    android:icon="@drawable/ic_action_device_usb"
+    android:title="usb" />
+<item android:id="@+id/bureau"
+    android:title="@string/login_text"
+
+    android:visible="true"
+    android:icon="@drawable/ic_action_navigation_menu">
+
+<menu>
+      <item
+      android:id="@+id/newlog"
+      android:title="@string/login_text"
+
+      />
+      </menu>
 
 
-  </item>
+</item>
 </menu>

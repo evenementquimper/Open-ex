@@ -21,6 +21,7 @@
     <string name="clear_text">Quitter</string>
     <string name="connection_error">Connection error.</string>
     <string name="eve_android_text">eve-android</string>
+    <string name="motion_control_text">Motion-control</string>
     <string name="e_control_text">e-control</string>
     <string name="sav_log">Se souvenir de moi</string>
     <string name="ok">Ok</string>
