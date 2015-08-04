@@ -23,6 +23,7 @@ import android.hardware.SensorManager;
 import android.opengl.GLSurfaceView;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.widget.Toast;
@@ -113,8 +114,9 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
         }
 
            //SensorManager.SENSOR_DELAY_UI
-        mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI);
-        mSensorManager.registerListener(this, mMagneticField, SensorManager.SENSOR_DELAY_UI);
+       //Ne pas enregistrer le listener au debut
+        //mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI);
+        //mSensorManager.registerListener(this, mMagneticField, SensorManager.SENSOR_DELAY_UI);
         //mSensorManager.registerListener(this, mGravity, SensorManager.SENSOR_DELAY_UI);//marche pas sur ma tab
         //mSensorManager.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_UI);//marche pas sur ma tab
         //mSensorManager.registerListener(this, mLinearAcceleration, SensorManager.SENSOR_DELAY_UI);//marche pas sur ma tab
@@ -126,6 +128,8 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
     private final float TOUCH_SCALE_FACTOR = 180.0f / 320;
     private float mPreviousX;
     private float mPreviousY;
+    private float mPreviousZ;
+    private double mPreviousD;
 
     float[] mAcc;
     float[] mGeomagnetic;
@@ -167,7 +171,16 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
 
     public void onNoVertices(){
         float[] novertice={0.0f,0.0f,0.0f};
+        mRenderer.clearVertex();
         mRenderer.setVertices(novertice);
+        requestRender();
+
+    }
+
+    public void onChangeCam(int zoom){
+        int cam_distance = mRenderer.getmCamerDist();
+        cam_distance=cam_distance+zoom;
+        mRenderer.setmCamerDist(cam_distance);
         requestRender();
     }
 
@@ -177,80 +190,202 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
         // and other input controls. In this case, we are only
         // interested in events where the touch position changed.
 
-
-
-
         float x = e.getX();
         float y = e.getY();
 
-        //Log.i(TAG,"Coord x: "+x);
-        //Log.i(TAG,"Coord y: "+y);
 
+int action = e.getAction();
+int historySize = e.getHistorySize();
+        if(e.getPointerCount()>1&&e.getPointerCount()<3)
+        {
+            //identité du pointer et de l'evenement
+            int actionPointerId = action & MotionEvent.ACTION_POINTER_INDEX_MASK;
+            int actionEvent= action & MotionEvent.ACTION_MASK;
+            int pointerIndex = e.findPointerIndex(actionPointerId);
 
-        switch (e.getAction()) {
-            case MotionEvent.ACTION_MOVE:
+            //Log.i(TAG,"Action pointer id: "+actionPointerId);
+            //Log.i(TAG,"Action history size: "+historySize);
 
-                float dx = x - mPreviousX;
-                float dy = y - mPreviousY;
+            float [] x_pos=new float[3];
+            float [] y_pos=new float[3];
+            float [] delta=new float[3];
+            double doub_delta=0.00;
 
-              //  float[] vertices = mRenderer.getVertices();
-               // int tailletab=vertices.length;
+            for (int i=0;i<historySize;i++) {
 
-                //float[] vertices2 = new float[vertices.length];
-
-                //for (int i=0;i<vertices.length;i++)
-                //{
-                   // Log.i(TAG,i+" Vertice: "+vertices[i]);
-                  //  if(vertices[i]<=0)
-                    //{
-                      //  vertices2[i]=vertices[i]+0.1f;
-                    //}
-                    //if(vertices[i]>0)
-                    //{
-                      //  vertices2[i]=vertices[i]-0.11f;
-                    //}
-
-                //}
-                //vertices=vertices2;
-
-
-
-                //mRenderer.setVertices(vertices2);
-
-                // reverse direction of rotation above the mid-line
-                if (y > getHeight() / 2) {
-                    dx = dx * -1 ;
+                if (i < 2) {
+                    //coordonnées x et y de chaques points
+                    x_pos[i] = e.getHistoricalX(pointerIndex, i);
+                    //Log.i(TAG, "Action pointer x: " + x_pos);
+                    y_pos[i] = e.getHistoricalY(pointerIndex, i);
+                  //  Log.i(TAG, "Action pointer y: " + y_pos);
                 }
+                else
+                {
 
-                // reverse direction of rotation to left of the mid-line
-                if (x < getWidth() / 2) {
-                    dy = dy * -1 ;
                 }
-                //mRenderer.setMtouchx(x / 1000);
-                //mRenderer.setMtouchy(y / 1000);
-                mRenderer.setAngle(
-                        mRenderer.getAngle() +
-                                ((dx + dy) * TOUCH_SCALE_FACTOR));  // = 180.0f / 320
+            }
+            try {
+                //Log.i(TAG,"x1: "+x_pos[0]+" x2: "+x_pos[1]);
+
+                if(x_pos[0]!=0.00d&&x_pos[1]!=0.00d&&y_pos[0]!=0.00d&&y_pos[1]!=0.00d) {
+                    delta[0] = Math.abs(x_pos[0] - x_pos[1]);
+                    delta[1] = Math.abs(y_pos[0] - y_pos[1]);
 
 
+                    double doub__x = (double) delta[0];
+                    double doub__y = (double) delta[1];
+
+//distance entre les 2 points
+                    doub_delta = Math.sqrt(Math.pow(doub__x, 2) + Math.pow(doub__y, 2));
+                    //Log.i(TAG, "Distance: " + doub_delta);
+                }
+                else
+                {
+
+                }
+            } catch (Exception e1) {
+                Log.i(TAG, "Erreur : "+e1);
+            }
+            if(mPreviousD!=0.00d)
+            {
+                double delta_distance=doub_delta-mPreviousD;
+                int cam_distance = mRenderer.getmCamerDist();
+          if(delta_distance<0)
+                {
+                    cam_distance=cam_distance+1;
+                }
+                if(delta_distance>=0)
+                {
+cam_distance=cam_distance-1;
+                }
+                Log.i(TAG, "Cam_Dist: "+cam_distance+", distanceD: "+delta_distance);
+
+                //cam_distance = cam_distance + (int)delta_distance/10;
+                    //augmentation de la distance de la caméra
+                mRenderer.setmCamerDist(cam_distance);
                 requestRender();
+            }
+            mPreviousD=doub_delta;
         }
 
-        mPreviousX = x;
-        mPreviousY = y;
+        else {
 
-        return true;
+            switch (e.getAction()) {
+
+                case MotionEvent.ACTION_MOVE:
+
+                    float dx = x - mPreviousX;
+                    float dy = y - mPreviousY;
+                    double doub_dz = 0.00;
+
+
+                    double doub_dx = (double) dx;
+                    double doub_dy = (double) dy;
+
+
+                    doub_dz = Math.sqrt(Math.pow(doub_dx, 2) + Math.pow(doub_dy, 2));
+
+                    // reverse direction of rotation above the mid-line
+                    if (y > getHeight() / 2) {
+                        dx = dx * -1;
+                    }
+
+                    // reverse direction of rotation to left of the mid-line
+                    if (x < getWidth() / 2) {
+                        dy = dy * -1;
+                    }
+
+                    float mAngle[] = mRenderer.getAngle();
+
+                    mAngle[0] = mAngle[0] + (float) doub_dx * TOUCH_SCALE_FACTOR;
+                    mAngle[1] = 0.0f;//mAngle[1] + (float) doub_dy * TOUCH_SCALE_FACTOR;
+                    mAngle[2] = 0.0f;//mAngle[2] + (float) doub_dz * TOUCH_SCALE_FACTOR;
+
+                    mRenderer.setAngle(mAngle);
+
+                    requestRender();
+
+            }
+
+            mPreviousX = x;
+            mPreviousY = y;
+        }
+
+            return true;
+
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
         float [] vert = mRenderer.getVertices();
-
+        float global_linear_acceleration [] = new float[3];
             if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-                mAcc = event.values;
+                long global_deltatime=0;
+
+                if(lastime!=0) {
+                    global_deltatime = event.timestamp - lastime;
+
+                    mAcc = event.values;
+
+                    //calcul de l'acceleration lineaire dans le repère global - la gravité en z
+                    global_linear_acceleration[0] = mAcc[0];
+                    global_linear_acceleration[1] = mAcc[1];
+                    global_linear_acceleration[2] = mAcc[2] - 9.807f;
+
+                    float global_nanotosec = global_deltatime / 1000000000f;
+
+                    float global_linear_vect[] = new float[3];
+                    global_linear_vect[0] = global_linear_acceleration[0] * global_nanotosec;
+                    global_linear_vect[1] = global_linear_acceleration[1] * global_nanotosec;
+                    global_linear_vect[2] = global_linear_acceleration[2] * global_nanotosec;
+
+                    //Suppression de la gravitée -9.55 ou -9.807
+                    //linear_acceleration[0]=mAcc[0]-9.807f*R[6];
+                    //linear_acceleration[1]=mAcc[1]-9.807f*R[7];
+                    //linear_acceleration[2]=mAcc[2]-9.807f*R[8];
+
+                    if (global_linear_vect[0] > 0.005 || global_linear_vect[1] > 0.005 || global_linear_vect[2] > 0.005 || global_linear_vect[0] < -0.005 || global_linear_vect[1] < -0.005 || global_linear_vect[2] < -0.005) {
+
+                        float global_nVertices[] = new float[vert.length + 3];
+
+
+                        try {
+                            for (int g = 0; g < vert.length; g++) {
+                                global_nVertices[g] = vert[g];
+                            }
+
+                            Log.i(TAG, "linear x," + global_linear_vect[0] + " linear y: " + global_linear_vect[1] + ", Linear vect:z " + global_linear_vect[2]);
+
+                            global_nVertices[global_nVertices.length - 1] = vert[vert.length - 1] + global_linear_vect[2];
+                            global_nVertices[global_nVertices.length - 2] = vert[vert.length - 2] + global_linear_vect[1];
+                            global_nVertices[global_nVertices.length - 3] = vert[vert.length - 3] + global_linear_vect[0];
+
+                        } catch (Exception e) {
+                            Log.i(TAG, "erreur ajout");
+                        }
+                        //Log.i(TAG, "Log vert: " + nVertices.length + " x," + nVertices[nVertices.length - 3] + " y," + nVertices[nVertices.length - 2]+ ", Linear vect:z " + nVertices[nVertices.length - 1] );
+                        sVertices = global_nVertices;
+                        mRenderer.setVertices(global_nVertices);
+                    } else {
+
+                    }
+                }
+                else
+                {
+
+                }
+                lastime=event.timestamp;
             }
+
+
+/*
+
         if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
             mGeomagnetic = event.values;
+  */
+
+    /*
         if (mAcc != null && mGeomagnetic != null) {
             float R[] = new float[9];
             float I[] = new float[9];
@@ -267,7 +402,7 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
                     linear_acceleration[1]=mAcc[1]-9.807f*R[7];
                     linear_acceleration[2]=mAcc[2]-9.807f*R[8];
 
-                    //calcul du vecteur
+                    //calcul du vecteur linéaire dans le repere !!! LOCAL !!! c.a.d suivant les axes x,y,z du téléphone
                     float nanotosec = deltatime/1000000000f;
 
                     float linear_vect[]=new float [3];
@@ -276,18 +411,25 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
                     linear_vect[2] = linear_acceleration[2]*nanotosec;
 
 
-                    if(linear_vect[0]>0.01|| linear_vect[1]>0.01||linear_vect[2]>0.01) {
+                    if(linear_vect[0]>0.005|| linear_vect[1]>0.005||linear_vect[2]>0.005||linear_vect[0]<-0.005||linear_vect[1]<-0.005||linear_vect[2]<-0.005) {
+
                         float nVertices[] = new float[vert.length+3];
-                        //Log.i(TAG, "Log vert: " + vert.length + ", Linear vect:z " + linear_vect[2] + " x," + linear_vect[0] + " y," + linear_vect[1]);
+
 
                         try {
                             for (int g = 0; g < vert.length; g++) {
                                 nVertices[g] = vert[g];
                             }
 
+                            Log.i(TAG, "linear x," +linear_vect[0]+ " linear y: "+linear_vect[1]+", Linear vect:z " +linear_vect[2]);
+
                             nVertices[nVertices.length - 1] = vert[vert.length-1]+linear_vect[2];
                             nVertices[nVertices.length - 2] = vert[vert.length-2]+linear_vect[1];
                             nVertices[nVertices.length - 3] = vert[vert.length-3]+linear_vect[0];
+
+                            //nVertices[nVertices.length - 1] = nVertices[nVertices.length - 4]+linear_vect[2];
+                            //nVertices[nVertices.length - 2] = nVertices[nVertices.length - 5]+linear_vect[1];
+                            //nVertices[nVertices.length - 3] = nVertices[nVertices.length - 6]+linear_vect[0];
 
 
                             //nVertices[nVertices.length - 4] = vert[vert.length-1]+linear_vect[0];
@@ -297,6 +439,8 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
                         } catch (Exception e) {
                             Log.i(TAG, "erreur ajout");
                         }
+                        //Log.i(TAG, "Log vert: " + nVertices.length + " x," + nVertices[nVertices.length - 3] + " y," + nVertices[nVertices.length - 2]+ ", Linear vect:z " + nVertices[nVertices.length - 1] );
+
                         sVertices=nVertices;
                         mRenderer.setVertices(nVertices);
                     }
@@ -338,8 +482,10 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
         //mRenderer.setAngle(
           //      mRenderer.getAngle() +
             //            ((z) * TOUCH_SCALE_FACTOR));  // = 180.0f / 320
-        requestRender();
 
+
+        //requestRender();
+*/
     }
 
     @Override

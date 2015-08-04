@@ -30,7 +30,7 @@ import javax.microedition.khronos.opengles.GL10;
 /**
  * A two-dimensional square for use as a drawn object in OpenGL ES 1.0/1.1.
  */
-public class Square implements SensorEventListener {
+public class Square {
 
     private final FloatBuffer vertexBuffer;
     private final ShortBuffer drawListBuffer;
@@ -75,10 +75,10 @@ public class Square implements SensorEventListener {
      *
      * @param gl - The OpenGL ES context in which to draw this shape.
      */
-    public void draw(GL10 gl) {
+    public void draw(GL10 gl, float mAngle) {
         // Since this shape uses vertex arrays, enable them
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-
+        gl.glRotatef(mAngle, mAngle, 0.0f, 1.0f);
         // draw the shape
         gl.glColor4f(       // set color
                 color[0], color[1],
@@ -94,16 +94,6 @@ public class Square implements SensorEventListener {
         // Disable vertex array drawing to avoid
         // conflicts with shapes that don't use it
         gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
-    }
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
     }
 
 }

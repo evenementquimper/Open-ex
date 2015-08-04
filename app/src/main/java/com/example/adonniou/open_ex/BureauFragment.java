@@ -18,11 +18,13 @@ package com.example.adonniou.open_ex;
 
 import android.app.FragmentTransaction;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.net.Uri;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.os.Environment;
@@ -40,9 +42,14 @@ import android.widget.Toast;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 /**
@@ -106,38 +113,29 @@ fa=super.getActivity();
         View layout = inflater.inflate(R.layout.bureaulayout_opengl, container, false);
         final MyGLSurfaceView GLView = (MyGLSurfaceView) layout.findViewById(R.id.glsurfaceview);
 
-       final ImageButton mImageButton= (ImageButton) layout.findViewById(R.id.lauchscan);
-        final ImageButton mResumeButton= (ImageButton) layout.findViewById(R.id.resume);
-        final ImageButton mCleanVerticesButton= (ImageButton) layout.findViewById(R.id.cleanvertices);
-        mResumeButton.setOnClickListener(new View.OnClickListener() {
+       final ImageButton mStopButton= (ImageButton) layout.findViewById(R.id.stop);
+        final ImageButton mStartButton= (ImageButton) layout.findViewById(R.id.start);
+        final ImageButton mCleanVerticesButton= (ImageButton) layout.findViewById(R.id.save_file);
+        final ImageButton mZommPlusButton= (ImageButton) layout.findViewById(R.id.zoomplus);
+        final ImageButton mZommMoinsButton= (ImageButton) layout.findViewById(R.id.zoommoins);
+
+        mStartButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
 //activation des sensors
                 GLView.onSensorsStart();
                 Toast.makeText(getActivity(), "Start: ", Toast.LENGTH_SHORT).show();
-                //GLView.getRootView();
-                //GLView.clearFocus();
-                //GLView.clearAnimation();
-                //GLView.onResume();
-
-
-//enregistrer le fichier .obj
-                //SaveOBJ(getActivity(),GLView);
             }
         });
 
-        mImageButton.setOnClickListener(new View.OnClickListener() {
+        mStopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 //pause des sensor
                 GLView.onSensorsPause();
 
                 Toast.makeText(getActivity(), "Stop: ", Toast.LENGTH_SHORT).show();
-                //GLView.getRootView();
-                //GLView.clearFocus();
-                //GLView.clearAnimation();
-                //GLView.onResume();
 
 
 //enregistrer le fichier .obj
@@ -148,9 +146,14 @@ fa=super.getActivity();
             @Override
             public void onClick(View v) {
 //pause des sensor
-                GLView.onNoVertices();
+
+                SaveOBJ(getActivity(), GLView);
+
+
+                //GLView.onNoVertices();
 
                 Toast.makeText(getActivity(), "Refresh: ", Toast.LENGTH_SHORT).show();
+
                 //GLView.getRootView();
                 //GLView.clearFocus();
                 //GLView.clearAnimation();
@@ -161,6 +164,22 @@ fa=super.getActivity();
                 //SaveOBJ(getActivity(),GLView);
             }
         });
+        mZommPlusButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                GLView.onChangeCam(1);
+    }
+        });
+        mZommMoinsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                GLView.onChangeCam(-1);
+            }
+        });
+
+
 
         if (mText != null) {
             mTextView.setText(mText);
@@ -175,7 +194,7 @@ fa=super.getActivity();
         FileOutputStream fOut = null;
         OutputStreamWriter osw = null;
 
-
+        File mFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS),"mocap.obj");
 
         // On crée un fichier qui correspond à l'emplacement extérieur
 
@@ -185,32 +204,23 @@ fa=super.getActivity();
         if(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
             try {
 
-                //File mFile = new File(Environment.getExternalStorageDirectory().getPath() + "/Android/data/ " + getActivity().getPackageName() + "/files/objet.obj");
-                //String filename = "/sdcard/objet.obj";
-                //File sdCard = Environment.getExternalStorageDirectory();
-                //filename = filename.replace("/sdcard", sdCard.getAbsolutePath());
-                //File tempFile = new File(filename);
-
-                // Flux interne
-                //output = context.openFileOutput("objet.obj", Context.MODE_PRIVATE);
-                fOut = context.openFileOutput("objet.obj", Context.MODE_APPEND);
-                //output=
-                //FileOutputStream output = new FileOutputStream(mFile);
-
+                Log.i(TAG, "Documents dir: "+Environment.DIRECTORY_DOCUMENTS);
+                fOut=new FileOutputStream(mFile);
                 osw = new OutputStreamWriter(fOut);
-
-                osw.write("# *.obj file (Generate by Open-ex 3D)\n");
+                osw.write("# *.obj file (Generate by Mocap 3D)\n");
                 osw.flush();
-                for (int i = 0; i < sVertices.length; i++) {
+
+                for (int i =0; i < sVertices.length-3; i++) {
 
                     try {
                         String data = "v "+Float.toString(sVertices[i])+" "+Float.toString(sVertices[i+1])+" "+Float.toString(sVertices[i+2])+"\n";
                        Log.i(TAG, data);
                         osw.write(data);
                         osw.flush();
-                        i=i+3;
+                        i=i+2;
                     } catch (Exception e) {
                         Toast.makeText(context, "erreur d'écriture: "+e, Toast.LENGTH_SHORT).show();
+                        Log.i(TAG, "Erreur: "+e);
                     }
 
                 }
@@ -218,14 +228,33 @@ fa=super.getActivity();
                 osw.write("# lignes:\n");
                 osw.write("l ");
                 osw.flush();;
-                for (int i = 1; i < sVertices.length; i++)
+                for (int i = 1; i < (-1+sVertices.length/3); i++)
                 {
                     osw.write(i+" ");
                     osw.flush();
-                    i=i+1;
                 }
                 //popup surgissant pour le résultat
                 Toast.makeText(context, "Settings saved", Toast.LENGTH_SHORT).show();
+
+                //lancement d'un explorateur de fichiers vers le fichier créer
+                //systeme des intend
+                try {
+                    File root = new File(Environment.DIRECTORY_DOCUMENTS);
+                    Uri uri = Uri.fromFile(mFile);
+
+                    Intent intent = new Intent();
+                    intent.setAction(Intent.ACTION_GET_CONTENT);
+                    intent.setData(uri);
+
+
+                    // Verify that the intent will resolve to an activity
+                    if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+                        Log.i(TAG,"intent pk: ");
+                        getActivity().startActivityForResult(intent, 1);
+                    }
+                } catch (Exception e) {
+                    Log.i(TAG,"Erreur intent: "+e);
+                }
             } catch (Exception e) {
                 Toast.makeText(context, "Settings not saved", Toast.LENGTH_SHORT).show();
             } finally {
@@ -237,6 +266,7 @@ fa=super.getActivity();
                 }
 
             }
+
         }
         else
         {
@@ -244,6 +274,59 @@ fa=super.getActivity();
         }
     }
 
+    public void Read_File(Context context)
+    {
+        FileInputStream fIn = null;
+        InputStreamReader isr = null;
+
+        char[] inputBuffer = new char[255];
+        String data = null;
+
+        JSONObject json=null;
+
+        try{
+            fIn = context.openFileInput("objet_1.obj");
+            isr = new InputStreamReader(fIn);
+            isr.read(inputBuffer);
+            data = new String(inputBuffer);
+            //affiche le contenu de mon fichier dans un popup surgissant
+            //Log.i(TAG, "Data: " + data);
+            //Toast.makeText(context, "data: " + data, Toast.LENGTH_SHORT).show();
+            //json=new JSONObject(data);
+
+        }
+        catch (Exception e) {
+            Toast.makeText(context, "Objet not read", Toast.LENGTH_SHORT).show();
+        }
+            /*finally {
+               try {
+                      isr.close();
+                      fIn.close();
+                      } catch (IOException e) {
+                        Toast.makeText(context, "Settings not read",Toast.LENGTH_SHORT).show();
+                      }
+            } */
+        //return json;
+    }
+
+    private String readIt(InputStream stream, int len) throws IOException, UnsupportedEncodingException {
+
+        //  BufferedReader r = new BufferedReader(new InputStreamReader(stream));
+        //StringBuilder total = new StringBuilder();
+        //String line;
+        //while ((line = r.readLine()) != null) {
+        //  total.append(line);
+        //}
+        //return total.toString();
+
+
+        Reader reader = null;
+        //stream.available();
+        reader = new InputStreamReader(stream, "UTF-8");
+        char[] buffer = new char[len];
+        reader.read(buffer);
+        return new String(buffer);
+    }
 
     public TextView getTextView() {
         return mTextView;

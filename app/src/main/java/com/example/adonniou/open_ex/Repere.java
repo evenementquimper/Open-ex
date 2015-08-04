@@ -18,16 +18,17 @@ package com.example.adonniou.open_ex;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
 /**
  * A two-dimensional triangle for use as a drawn object in OpenGL ES 1.0/1.1.
  */
-public class Ligne {
+public class Repere {
 
     private final FloatBuffer vertexBuffer;
-
+    private final ShortBuffer drawListBuffer;
     // number of coordinates per vertex in this array
     static final int COORDS_PER_VERTEX = 3;
     static float triangleCoords[] = {
@@ -36,6 +37,14 @@ public class Ligne {
            -0.5f, -0.311004243f, 0.0f,// bottom left
             0.5f, -0.311004243f, 0.0f // bottom right
     };
+
+    static float RepereCoords[] = {
+            0.0f,  0.0f, 0.0f,   //
+            0.5f, 0.0f, 0.0f,   // x
+            0.0f,  0.5f, 0.0f,  // x
+            0.0f,  0.0f, 0.5f, }; // z
+
+    private final short drawOrder[] = { 0, 1, 0, 2, 0, 3 }; // order to draw vertices
 
     static float ligneCoords[] = {
             // in counterclockwise order:
@@ -50,20 +59,27 @@ public class Ligne {
     /**
      * Sets up the drawing object data for use in an OpenGL ES context.
      */
-    public Ligne() {
+    public Repere() {
+
         // initialize vertex byte buffer for shape coordinates
         ByteBuffer bb = ByteBuffer.allocateDirect(
-                // (number of coordinate values * 4 bytes per float)
-                ligneCoords.length*4);
-        // use the device hardware's native byte order
+                // (# of coordinate values * 4 bytes per float)
+                RepereCoords.length * 4);
         bb.order(ByteOrder.nativeOrder());
-
-        // create a floating point buffer from the ByteBuffer
         vertexBuffer = bb.asFloatBuffer();
-        // add the coordinates to the FloatBuffer
-        vertexBuffer.put(ligneCoords);
-        // set the buffer to read the first coordinate
+
+        vertexBuffer.put(RepereCoords);
         vertexBuffer.position(0);
+
+        // initialize byte buffer for the draw list
+        ByteBuffer dlb = ByteBuffer.allocateDirect(
+                // (# of coordinate values * 2 bytes per short)
+                drawOrder.length * 2);
+        dlb.order(ByteOrder.nativeOrder());
+        drawListBuffer = dlb.asShortBuffer();
+        drawListBuffer.put(drawOrder);
+        drawListBuffer.position(0);
+
     }
 
     /**
@@ -71,12 +87,11 @@ public class Ligne {
      *
      * @param gl - The OpenGL ES context in which to draw this shape.
      */
-    public void draw(GL10 gl) {
+    public void draw(GL10 gl,float []mAngle) {
 
 
         // Since this shape uses vertex arrays, enable them
         gl.glEnableClientState(GL10.GL_LINES);
-
         // draw the shape
         gl.glColor4f(       // set color:
                 color[0], color[1],
@@ -84,11 +99,13 @@ public class Ligne {
         gl.glVertexPointer( // point to vertex data:
                 COORDS_PER_VERTEX,
                 GL10.GL_FLOAT, 0, vertexBuffer);
+        gl.glRotatef(mAngle[0],mAngle[0],mAngle[1],mAngle[2]);
         gl.glDrawArrays(    // draw shape:
                 GL10.GL_LINES, 0,
-                ligneCoords.length / COORDS_PER_VERTEX);
+                RepereCoords.length / COORDS_PER_VERTEX);
 
-        //gl.glDrawElements(GL10.GL_LINES,1,2,);
+        gl.glDrawElements(GL10.GL_LINES,drawOrder.length, GL10.GL_UNSIGNED_SHORT,
+                drawListBuffer);
 
         // Disable vertex array drawing to avoid
         // conflicts with shapes that don't use it
