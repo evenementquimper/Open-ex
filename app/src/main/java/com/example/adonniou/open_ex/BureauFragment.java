@@ -110,14 +110,25 @@ public class BureauFragment extends Fragment {
         processArguments();
 fa=super.getActivity();
 
-        View layout = inflater.inflate(R.layout.bureaulayout_opengl, container, false);
+        View layout = inflater.inflate(R.layout.bureaulayout_opengl, container, false);//com.example.adonniou.open_ex.MyGLSurfaceView
         final MyGLSurfaceView GLView = (MyGLSurfaceView) layout.findViewById(R.id.glsurfaceview);
 
-       final ImageButton mStopButton= (ImageButton) layout.findViewById(R.id.stop);
+        final ImageButton mInitButton= (ImageButton) layout.findViewById(R.id.init);
+        final ImageButton mStopButton= (ImageButton) layout.findViewById(R.id.stop);
         final ImageButton mStartButton= (ImageButton) layout.findViewById(R.id.start);
         final ImageButton mCleanVerticesButton= (ImageButton) layout.findViewById(R.id.save_file);
         final ImageButton mZommPlusButton= (ImageButton) layout.findViewById(R.id.zoomplus);
         final ImageButton mZommMoinsButton= (ImageButton) layout.findViewById(R.id.zoommoins);
+
+        mInitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+//activation des sensors
+                GLView.onInitGravity();
+                Toast.makeText(getActivity(), "Init Gravity: ", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         mStartButton.setOnClickListener(new View.OnClickListener() {
             @Override

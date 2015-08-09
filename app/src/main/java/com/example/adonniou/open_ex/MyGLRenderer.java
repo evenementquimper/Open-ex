@@ -15,15 +15,25 @@
  */
 package com.example.adonniou.open_ex;
 
+import android.content.Context;
 import android.hardware.SensorEvent;
+import android.hardware.display.DisplayManager;
 import android.opengl.GLU;
+import android.os.Environment;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
+import android.view.Window;
+import android.view.WindowManager;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import android.content.Context;
+
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -42,15 +52,21 @@ import javax.microedition.khronos.opengles.GL10;
 
 public class MyGLRenderer implements MyGLSurfaceView.Renderer {
 
-    private Triangle mTriangle;
-    private Square mSquare;
+    Context context;
+
+    private OBJParser parser;
+    private TDModel model;
+
     private Grille mGrille;
+    private Iphone mIphone;
     private float []mAngle = new float[3];
     private float mtouchx;
     private float mtouchy;
     private int mCamerDist;
     private Repere mRepere;
-    private Volume mVolume;
+    private DisplayMetrics ecran = new DisplayMetrics();
+    private int DisWidth=250 ;
+    private int DisHeight=400;
 
     private static final String TAG = "EDroide";
 
@@ -150,41 +166,72 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer {
             {1.0f, 0.0f, 0.0f, 1.0f},  // 4. red
             {1.0f, 1.0f, 0.0f, 1.0f},   // 5. yellow
     };
+
+    private ShortBuffer drawListBuffer;
+    private short drawOrder[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22}; // order to draw vertices
+
     private int numFaces = 6;
 
     private FloatBuffer vertexBuffer;  // Buffer for vertex-array
+
+    private float[] RepMatrix = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
+
+    private ByteBuffer vbb = ByteBuffer.allocateDirect(4000);
+
+    private ByteBuffer dlb = ByteBuffer.allocateDirect(
+            // (# of coordinate values * 2 bytes per short)
+            2000);
+
+    public float[] getRepMatrix() {
+        return RepMatrix;
+    }
+
+    public void setRepMatrix(float[] repMatrix) {
+        RepMatrix = repMatrix;
+    }
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         // Set the background frame color
 
+        //parser=new OBJParser(context);
+        //model=parser.parseOBJ("C:/Helicoptere.obj");
+
+
         Log.i(TAG, "Surface Created");
         gl.glClearColor(0.192f, 0.192f, 0.192f, 0.0f);  // Set color's clear-value to black
         gl.glClearDepthf(1.0f);            // Set depth's clear-value to farthest
-        //gl.glEnable(GL10.GL_DEPTH_TEST);   // Enables depth-buffer for hidden surface removal, Ne change rien
-        //gl.glDepthFunc(GL10.GL_LEQUAL);    // The type of depth testing to do , peut etre mieux sans
-        //gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_NICEST);  // nice perspective view, peut etre mieux sans
-        //gl.glShadeModel(GL10.GL_SMOOTH);   // Enable smooth shading of color , Ne change rien
-        //gl.glDisable(GL10.GL_DITHER);      // Disable dithering for better performance , Ne change rien
+        gl.glEnable(GL10.GL_DEPTH_TEST);   // Enables depth-buffer for hidden surface removal, Ne change rien
+        gl.glDepthFunc(GL10.GL_LEQUAL);    // The type of depth testing to do , peut etre mieux sans
+        gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_NICEST);  // nice perspective view, peut etre mieux sans
+        gl.glShadeModel(GL10.GL_SMOOTH);   // Enable smooth shading of color , Ne change rien
+        gl.glDisable(GL10.GL_DITHER);      // Disable dithering for better performance , Ne change rien
 
 
        // mVolume= new Volume();
 
                // Setup vertex-array buffer. Vertices in float. An float has 4 bytes
 
-        ByteBuffer vbb = ByteBuffer.allocateDirect(vertices_init.length * 4);
+        //vbb = ByteBuffer.allocateDirect(4000);
         vbb.order(ByteOrder.nativeOrder()); // Use native byte order
         vertexBuffer = vbb.asFloatBuffer(); // Convert from byte to float
         vertexBuffer.put(vertices_init);         // Vertices change
         vertexBuffer.position(0);           // Rewind
 
+
+        dlb.order(ByteOrder.nativeOrder());
+        drawListBuffer = dlb.asShortBuffer();
+        drawListBuffer.put(drawOrder);
+        drawListBuffer.position(0);
+
         // Enabled the vertex buffer for writing and to be used during rendering.
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-        //mTriangle = new Triangle();
-        //mSquare = new Square();
-        mRepere= new Repere();
+        //mRepere= new Repere();
         mGrille=new Grille();
+        //mIphone=new Iphone();
+
     }
+
 
     @Override
     public void onDrawFrame(GL10 gl) {
@@ -193,8 +240,15 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer {
         // Draw background color
         gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
 
+        //gl.glMatrixMode(GL10.GL_PROJECTION); // Change PROJECTION matrix
+        gl.glLoadIdentity();
+
+        float aspect_ratio = (float) DisWidth / DisHeight;
+        GLU.gluPerspective(gl, 67, aspect_ratio, 1, 100);
+        gl.glEnable(GL10.GL_DEPTH_TEST);
         // Set GL_MODELVIEW transformation mode
         gl.glMatrixMode(GL10.GL_MODELVIEW);
+
         gl.glLoadIdentity();   // reset the matrix to its default state
 
         // When using GL_MODELVIEW, you must set the view point
@@ -202,16 +256,13 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer {
         GLU.gluLookAt(gl, 0, 0, mCamerDist, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
 //GLU.gluPerspective(gl,40.0f,1.5f,3.0f,20.0f);
         //gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-        //gl.glDrawArrays(GL10.GL_LINES, 0, 2);
-        //Draw ligne
-        //mLigne.draw(gl);
-
-        //mSquare.draw(gl, mAngle);
-        mGrille.draw(gl,mAngle);
-        mRepere.draw(gl, mAngle);
+       mGrille.draw(gl,mAngle);
+        //mRepere.draw(gl, mAngle);
+        //mIphone.draw(gl, mAngle);
         gl.glTranslatef(mtouchx, mtouchy, 0);
-
-        gl.glRotatef(mAngle[0], 0.0f,mAngle[0], 0.0f);
+       // Log.i(TAG, "Angle objet: " + mAngle[1]);
+        gl.glRotatef(mAngle[1], 0f, mAngle[1], 0f);
+        //gl.glRotatef(mAngle[0],mAngle[0],0f,0f);
 
         gl.glShadeModel(GL10.GL_FLAT);
         gl.glEnable(GL10.GL_BLEND);
@@ -227,16 +278,43 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer {
             mVertices=vertices_init;
 
         }
-        //Log.i(TAG, "lg mVert: "+mVertices.length);
-        //Log.i(TAG, "capacité du vertex: "+vertexBuffer.capacity());
 
         if(vertexBuffer.capacity()<mVertices.length)
         {
 
-            ByteBuffer vbb = ByteBuffer.allocateDirect(mVertices.length * 4);
-            vbb.order(ByteOrder.nativeOrder()); // Use native byte order
+            ByteBuffer vbb1 = ByteBuffer.allocateDirect(mVertices.length * 4);
+            vbb1.order(ByteOrder.nativeOrder()); // Use native byte order
+
+            //vertexBuffer.clear();
+
+            //vertexBuffer.limit(mVertices.length);
+
             vertexBuffer = vbb.asFloatBuffer(); // Convert from byte to float
-            vertexBuffer.put(mVertices);
+
+            //Log.i(TAG, "Vertex Buffer: " + vertexBuffer.capacity());
+            try {
+            //    vbb = ByteBuffer.allocateDirect(mVertices.length * 4);
+                vertexBuffer.put(mVertices);
+            } catch (Exception e) {
+                Log.i(TAG,"erreur put"+e);
+            }
+
+            //recalcul du drawOrder
+            drawOrder=null;
+            drawOrder=new short[mVertices.length];
+            for(int i=0; i<mVertices.length;i++){
+                drawOrder[i]=(short)i;
+            }
+
+            // initialize byte buffer for the draw list
+            //ByteBuffer dlb = ByteBuffer.allocateDirect(
+                    // (# of coordinate values * 2 bytes per short)
+              //      drawOrder.length * 2);
+            //dlb.order(ByteOrder.nativeOrder());
+            //drawListBuffer = dlb.asShortBuffer();
+//drawListBuffer.limit(mVertices.length);
+            drawListBuffer.put(drawOrder);
+            drawListBuffer.position(0);
 
         }
         else
@@ -259,11 +337,21 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer {
             gl.glColor4f(colors[2][0], colors[2][1], colors[2][2], colors[2][3]);
             // Draw the primitive from the vertex-array directly
 
-           // gl.glDrawArrays(GL10.GL_TRIANGLE_STRIP, face*4, mVertices.length/12);
-            //gl.glDrawArrays(GL10.GL_TRIANGLE_STRIP, 0,mVertices.length/3);
         //}
-        gl.glDrawArrays(GL10.GL_LINE_STRIP, 0, mVertices.length/2); //affige plusieurs lignes
+//GL_LINEAR affiche rien
+        //GL_LINES lignes en discontinues
+        //GL_LINESMOOTH_HINT, GL_LINE_SMOOTH affiche rien
+        //GL_LINE_LOOP affiche ligne + ligne erreurs
+            gl.glDrawArrays(GL10.GL_LINE_STRIP, 0, mVertices.length); //affige plusieurs lignes
         gl.glLineWidth(3);
+        //gl.glDrawElements(GL10.GL_LINE_STRIP, drawOrder.length, GL10.GL_UNSIGNED_SHORT, //GL_UNSIGNED_SHORT
+          //      drawListBuffer);
+
+        // Disable vertex array drawing to avoid
+        // conflicts with shapes that don't use it
+        //efface la grille bleu
+        //gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
+
         //gl.glDrawArrays(GL10.GL_POINTS, 0, mVertices.length);//affiche rien
         //gl.glDrawArrays(GL10.GL_LINE_SMOOTH, 0, mVertices.length/2);//affiche rien
         //Disable the client state before leaving
@@ -277,6 +365,7 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer {
         // Adjust the viewport based on geometry changes
         // such as screen rotations
 
+
         vertexBuffer.clear();
 
         if (mVertices!=null)
@@ -289,17 +378,13 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer {
 
         }
 
-        ByteBuffer vbb = ByteBuffer.allocateDirect(vertices.length * 4);
-        vbb.order(ByteOrder.nativeOrder()); // Use native byte order
-        vertexBuffer = vbb.asFloatBuffer(); // Convert from byte to float
+//        ByteBuffer vbb = ByteBuffer.allocateDirect(vertices.length * 4);
+  //      vbb.order(ByteOrder.nativeOrder()); // Use native byte order
+    //    vertexBuffer = vbb.asFloatBuffer(); // Convert from byte to float
 
 
         vertexBuffer.put(mVertices);         // vertex change
         gl.glVertexPointer(3, GL10.GL_FLOAT, 0, vertexBuffer);
-        //mVolume.setEventTable(EventTable);
-
-        //Log.i(TAG, "width: " + width);
-        //Log.i(TAG, "width: " + height);
 
         gl.glViewport(0, 0, width, height);
 
@@ -311,68 +396,13 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer {
 
     }
 
+    public void onIntro (GL10 gl)
+    {
+
+    }
+
     public void onObjectModif(GL10 gl)
     {
-        // Draw background color
-        gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
-
-        // Set GL_MODELVIEW transformation mode
-        gl.glMatrixMode(GL10.GL_MODELVIEW);
-        gl.glLoadIdentity();   // reset the matrix to its default state
-
-        // When using GL_MODELVIEW, you must set the view point
-
-        GLU.gluLookAt(gl, 0, 0, mCamerDist, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
-
-        mRepere.draw(gl, mAngle);
-
-        gl.glRotatef(mAngle[0], mAngle[0], mAngle[1], mAngle[2]);
-
-        gl.glShadeModel(GL10.GL_FLAT);
-        gl.glEnable(GL10.GL_BLEND);
-        gl.glBlendFunc(GL10.GL_SRC_ALPHA, 1);
-
-        //vertexBuffer.clear();
-
-        if (mVertices!=null)
-        {
-            mVertices=sqare_vertices;
-        }
-        else {
-            mVertices=sqare_vertices;
-
-        }
-
-        if(vertexBuffer.capacity()<mVertices.length)
-        {
-
-            ByteBuffer vbb = ByteBuffer.allocateDirect(mVertices.length * 4);
-            vbb.order(ByteOrder.nativeOrder()); // Use native byte order
-            vertexBuffer = vbb.asFloatBuffer(); // Convert from byte to float
-            vertexBuffer.put(mVertices);
-
-        }
-        else
-        {
-
-        }
-        //for(int i=0;i<mVertices.length;i++)
-        //{
-        //    Log.i(TAG, "vertices "+i+": "+mVertices[i]);
-        //}
-
-        vertexBuffer.position(0);           // Rewind
-        gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);//indispensable
-        gl.glVertexPointer(3, GL10.GL_FLOAT, 0, vertexBuffer);
-
-
-        // Render all the faces
-        for (int face = 0; face < numFaces; face++) {
-            // Set the color for each of the faces
-            gl.glColor4f(colors[face][0], colors[face][1], colors[face][2], colors[face][3]);
-            // Draw the primitive from the vertex-array directly
-            gl.glDrawArrays(GL10.GL_TRIANGLE_STRIP, face*4, 4);
-        }
 
     }
 
@@ -389,9 +419,9 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer {
     public void clearVertex(){
         this.vertexBuffer=null;
         ByteBuffer vbb = ByteBuffer.allocateDirect(vertices_init.length * 4);
-        vbb.order(ByteOrder.nativeOrder()); // Use native byte order
+        //vbb.order(ByteOrder.nativeOrder()); // Use native byte order
         this.vertexBuffer = vbb.asFloatBuffer(); // Convert from byte to float
-        this.vertexBuffer.put(vertices_init);
+        //this.vertexBuffer.put(vertices_init);
 
     }
 

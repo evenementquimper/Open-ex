@@ -40,6 +40,7 @@ import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -48,6 +49,8 @@ import javax.microedition.khronos.opengles.GL10;
  * This view can also be used to capture touch events, such as a user
  * interacting with drawn objects.
  */
+
+//com.example.adonniou.open_ex.MyGLSurfaceView
 public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListener {
 
     static private Sensor mAccelerometer;
@@ -69,15 +72,12 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
     private MyGLRenderer mRenderer;
     private MyGLRenderer myGLRenderer;
 
-
-
     private float[] sVertices;
 
     public MyGLSurfaceView(Context context, AttributeSet attrs) {
         super(context, attrs);
         // Set the Renderer for drawing on the GLSurfaceView
         mRenderer = new MyGLRenderer();
-        //this.setRenderMode(RENDERMODE_WHEN_DIRTY);
         setRenderer(mRenderer);
 
         mRenderer.setmCamerDist(-7);
@@ -130,13 +130,16 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
     private float mPreviousY;
     private float mPreviousZ;
     private double mPreviousD;
+    private double mPrevious_doub_dx;
+    private double mPrevious_doub_dy;
 
     float[] mAcc;
     float[] mGeomagnetic;
     float[] mLinear;
     long lastime=0;
-    //float[] gravity={0,0,0};
     float[] linear_acceleration;
+
+    private float[] CalibreGravity=null;
 
     int var=0;
 
@@ -158,6 +161,7 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
         mSensorManager.unregisterListener(this);
 
     }
+
 
     public void onSensorsStart(){
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI);
@@ -181,7 +185,23 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
         int cam_distance = mRenderer.getmCamerDist();
         cam_distance=cam_distance+zoom;
         mRenderer.setmCamerDist(cam_distance);
+        //Log.i(TAG, "Erreur GL: " + gl.glGetError());
         requestRender();
+    }
+
+    public void onInitGravity()
+    {
+//Lecture du fichier d'initialisation
+        //si vide :
+        CalibreGravity=new float[3];
+        CalibreGravity [0] = 0.0f;
+        CalibreGravity [1] = 0.0f;
+        CalibreGravity [2] = 0.0f;
+//Ne plus bouger l'appareil
+//debut d'initialisation
+        onSensorsStart();
+
+
     }
 
     @Override
@@ -196,6 +216,10 @@ public class MyGLSurfaceView extends GLSurfaceView implements SensorEventListene
 
 int action = e.getAction();
 int historySize = e.getHistorySize();
+
+        //systeme de gestion du clic deux doigts, pas au point
+
+        /*
         if(e.getPointerCount()>1&&e.getPointerCount()<3)
         {
             //identité du pointer et de l'evenement
@@ -270,7 +294,7 @@ cam_distance=cam_distance-1;
         }
 
         else {
-
+*/
             switch (e.getAction()) {
 
                 case MotionEvent.ACTION_MOVE:
@@ -284,33 +308,32 @@ cam_distance=cam_distance-1;
                     double doub_dy = (double) dy;
 
 
-                    doub_dz = Math.sqrt(Math.pow(doub_dx, 2) + Math.pow(doub_dy, 2));
+                    //doub_dz = Math.sqrt(Math.pow(doub_dx, 2) + Math.pow(doub_dy, 2));
 
                     // reverse direction of rotation above the mid-line
-                    if (y > getHeight() / 2) {
-                        dx = dx * -1;
-                    }
+                  //  if (y > getHeight() / 2) {
+                    //    dx = dx * -1;
+                    //}
 
                     // reverse direction of rotation to left of the mid-line
-                    if (x < getWidth() / 2) {
-                        dy = dy * -1;
-                    }
+                    //if (x < getWidth() / 2) {
+                      //  dy = dy * -1;
+                    //}
 
                     float mAngle[] = mRenderer.getAngle();
 
-                    mAngle[0] = mAngle[0] + (float) doub_dx * TOUCH_SCALE_FACTOR;
-                    mAngle[1] = 0.0f;//mAngle[1] + (float) doub_dy * TOUCH_SCALE_FACTOR;
-                    mAngle[2] = 0.0f;//mAngle[2] + (float) doub_dz * TOUCH_SCALE_FACTOR;
+                    mAngle[0] = mAngle[0] - (float) doub_dy * TOUCH_SCALE_FACTOR;
+                    mAngle[1] = mAngle[1] + (float) doub_dx * TOUCH_SCALE_FACTOR;
+                    mAngle[2] = 0.0f;//mAngle[2] + (float) doub_dy * TOUCH_SCALE_FACTOR;
 
                     mRenderer.setAngle(mAngle);
 
                     requestRender();
-
             }
 
             mPreviousX = x;
             mPreviousY = y;
-        }
+
 
             return true;
 
@@ -318,16 +341,16 @@ cam_distance=cam_distance-1;
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        float [] vert = mRenderer.getVertices();
-        float global_linear_acceleration [] = new float[3];
-            if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-                long global_deltatime=0;
+        float[] vert = mRenderer.getVertices();
+        float global_linear_acceleration[] = new float[3];
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            //long global_deltatime = 0;
 
-                if(lastime!=0) {
-                    global_deltatime = event.timestamp - lastime;
-
-                    mAcc = event.values;
-
+//                if(lastime!=0) {
+            // global_deltatime = event.timestamp - lastime;
+//mAcc donne les valeur de l'acc avec la gravité par rapport au repere LOCAL
+            mAcc = event.values;
+/*
                     //calcul de l'acceleration lineaire dans le repère global - la gravité en z
                     global_linear_acceleration[0] = mAcc[0];
                     global_linear_acceleration[1] = mAcc[1];
@@ -367,6 +390,7 @@ cam_distance=cam_distance-1;
                         //Log.i(TAG, "Log vert: " + nVertices.length + " x," + nVertices[nVertices.length - 3] + " y," + nVertices[nVertices.length - 2]+ ", Linear vect:z " + nVertices[nVertices.length - 1] );
                         sVertices = global_nVertices;
                         mRenderer.setVertices(global_nVertices);
+
                     } else {
 
                     }
@@ -379,13 +403,14 @@ cam_distance=cam_distance-1;
             }
 
 
-/*
+*/
+        }
 
         if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
             mGeomagnetic = event.values;
-  */
 
-    /*
+
+
         if (mAcc != null && mGeomagnetic != null) {
             float R[] = new float[9];
             float I[] = new float[9];
@@ -394,24 +419,57 @@ cam_distance=cam_distance-1;
             if (success) {
                 long deltatime=0;
 
-                if(lastime!=0) {
-                    deltatime = event.timestamp - lastime;
+                if(CalibreGravity[0]==0.0f&&CalibreGravity[1]==0.0f&&CalibreGravity[2]==0.0f)
+                {
+                    CalibreGravity[0]=mAcc[0];
+                    CalibreGravity[1]=mAcc[1];
+                    CalibreGravity[2]=mAcc[2];
+                    //Log.i(TAG,"Acc lineaire X: "+mAcc[0]+" Y: "+mAcc[1]+" Z:"+mAcc[2]);
+                    //Log.i(TAG,"Gravité X: "+CalibreGravity[0]+" Y: "+CalibreGravity[1]+" Z:"+CalibreGravity[2]);
+                    onSensorsPause();
+                }
 
+                if(lastime!=0 && CalibreGravity!=null) {
+
+
+                    deltatime = event.timestamp - lastime;
+                    //Log.i(TAG,"Acc brut X: "+mAcc[0]+" Y: "+mAcc[1]+" Z:"+mAcc[2]);
                     //Suppression de la gravitée -9.55 ou -9.807
-                    linear_acceleration[0]=mAcc[0]-9.807f*R[6];
-                    linear_acceleration[1]=mAcc[1]-9.807f*R[7];
-                    linear_acceleration[2]=mAcc[2]-9.807f*R[8];
+                    linear_acceleration[0]=mAcc[0]-CalibreGravity[0];
+                    linear_acceleration[1]=mAcc[1]-CalibreGravity[1];
+                    linear_acceleration[2]=mAcc[2]-CalibreGravity[2];
+                    float []result=new float[3];
+                    Log.i(TAG,"Acc lineaire X: "+linear_acceleration[0]+" Y: "+linear_acceleration[1]+" Z:"+linear_acceleration[2]);
+                    mRenderer.setRepMatrix(R);
+
+                    try {
+                        result=LocalToGlobal(linear_acceleration,mAcc,R);
+                    } catch (Exception e) {
+                        Log.i(TAG, "erreur de calcul: "+e);
+                    }
+
 
                     //calcul du vecteur linéaire dans le repere !!! LOCAL !!! c.a.d suivant les axes x,y,z du téléphone
                     float nanotosec = deltatime/1000000000f;
 
+                    //result[2]=result[2]-9.807f;
+                    //result[2]=result[2]*nanotosec;
+                    //Log.i(TAG, "force Z: "+result[2]);
+
                     float linear_vect[]=new float [3];
-                    linear_vect[0] = linear_acceleration[0]*nanotosec;
-                    linear_vect[1] = linear_acceleration[1]*nanotosec;
-                    linear_vect[2] = linear_acceleration[2]*nanotosec;
 
+                    linear_vect[0] = result[0]*nanotosec;
+                    linear_vect[1] = result[1]*nanotosec;
+                    linear_vect[2] = result[2]*nanotosec;
 
-                    if(linear_vect[0]>0.005|| linear_vect[1]>0.005||linear_vect[2]>0.005||linear_vect[0]<-0.005||linear_vect[1]<-0.005||linear_vect[2]<-0.005) {
+                    //linear_vect[0] = linear_acceleration[0]*nanotosec;
+                    //linear_vect[1] = linear_acceleration[1]*nanotosec;
+                    //linear_vect[2] = linear_acceleration[2]*nanotosec;
+
+                    Log.i(TAG,"global vecteur X: "+linear_vect[0]+" Y: "+linear_vect[1]+" Z:"+linear_vect[2]);
+                    if(linear_vect[0]>0.01|| linear_vect[1]>0.01||linear_vect[2]>0.01||linear_vect[0]<-0.01||linear_vect[1]<-0.01||linear_vect[2]<-0.01) {
+
+                        //avant de transmettre les vertices il faut les mettre dans le repere GLOBAL
 
                         float nVertices[] = new float[vert.length+3];
 
@@ -421,11 +479,22 @@ cam_distance=cam_distance-1;
                                 nVertices[g] = vert[g];
                             }
 
-                            Log.i(TAG, "linear x," +linear_vect[0]+ " linear y: "+linear_vect[1]+", Linear vect:z " +linear_vect[2]);
+                            //Log.i(TAG, "linear x," +linear_vect[0]+ " linear y: "+linear_vect[1]+", Linear vect:z " +linear_vect[2]);
 
-                            nVertices[nVertices.length - 1] = vert[vert.length-1]+linear_vect[2];
-                            nVertices[nVertices.length - 2] = vert[vert.length-2]+linear_vect[1];
-                            nVertices[nVertices.length - 3] = vert[vert.length-3]+linear_vect[0];
+                            if(deltatime >500000000)
+                            {
+                                nVertices[nVertices.length - 1] = nVertices[nVertices.length - 4];
+                                nVertices[nVertices.length - 2] = nVertices[nVertices.length - 5];
+                                nVertices[nVertices.length - 3] = nVertices[nVertices.length - 6];
+
+
+                            }
+else {
+                                nVertices[nVertices.length - 1] = vert[vert.length - 1] + linear_vect[2];
+                                nVertices[nVertices.length - 2] = vert[vert.length - 2] + linear_vect[1];
+                                nVertices[nVertices.length - 3] = vert[vert.length - 3] + linear_vect[0];
+                            }
+
 
                             //nVertices[nVertices.length - 1] = nVertices[nVertices.length - 4]+linear_vect[2];
                             //nVertices[nVertices.length - 2] = nVertices[nVertices.length - 5]+linear_vect[1];
@@ -451,13 +520,23 @@ cam_distance=cam_distance-1;
                 }
                 else
                 {
+//Calibrer la gravité
+                    //CalibreGravity=new float[3];
+                    //CalibreGravity[0]=mAcc[0];
 
+                    //CalibreGravity[1]=mAcc[1];
+                    //CalibreGravity[2]=mAcc[2];
+                    //Log.i(TAG, "Init gravity: x:"+CalibreGravity[0]+" y:"+CalibreGravity[1]+" z:"+CalibreGravity[2]);
                 }
                 lastime=event.timestamp;
 
                 float orientation[] = new float[3];
                 SensorManager.getOrientation(R, orientation);
 
+                //for(int i=0;i<R.length;i++)
+                //{
+                 //   Log.i(TAG, "R"+i+": "+R[i]);
+                //}
                 //recup azimut
                 float azimut = orientation[0]; // orientation contains: azimut, pitch and roll
                // Log.i(TAG, "Azimut: "+azimut);
@@ -465,8 +544,10 @@ cam_distance=cam_distance-1;
                 //Log.i(TAG,"roll: "+orientation[2]);
             }
         }
+        requestRender();
 
-        //}
+
+    }
 //Log.i(TAG, "Event timestamp: "+event.timestamp); //ex:1249672200000 nanosecondes soit 124,967.. secondes
        // Log.i(TAG, "grav"+event.values[2]);
         //float x=event.values[0];
@@ -484,22 +565,68 @@ cam_distance=cam_distance-1;
             //            ((z) * TOUCH_SCALE_FACTOR));  // = 180.0f / 320
 
 
-        //requestRender();
-*/
-    }
+
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
     }
-
-
     public float[] getsVertices() {
         return sVertices;
     }
 
     public void setsVertices(float[] sVertices) {
         this.sVertices = sVertices;
+    }
+
+    private float[] LocalToGlobal (float[] linear_acceleration, float[] acceleration, float[]R){
+        float[]FGlobal=new float[3];
+        float B = R[4]-R[5];
+        float C = R[7]-R[8];
+        float D = linear_acceleration[2]-linear_acceleration[1];
+        float E = R[4]-R[3];
+        float F = R[7]-R[6];
+        float G = linear_acceleration[0]-linear_acceleration[1];
+        float H = R[2]-R[1];
+        float I = R[0]-R[1];
+
+        float L1 = linear_acceleration[0]-linear_acceleration[1];
+        float L2 = linear_acceleration[2]-linear_acceleration[1];
+
+        float J = (B/H)-(E/I);
+        float K = (C/H)-(F/I);
+        float S = ((D+L2)/H)-((G+L1)/I);
+
+        //FGlobal[1]=(-S-FGlobal[2]*K)/J
+        //FGlobal[0]=((-S-FGlobal[2]*K)/J)*B-FGlobal[2]*C+D)/H;
+        //((((-S-FGlobal[2]*K)/J)*B-FGlobal[2]*C+D)/H)*R[2]+((-S-FGlobal[2]*K)/J)*R[5]+FGlobal[2]*R[8]-acceleration[2];
+
+        //FGlobal[2]=9.807f-((((S*B*R[2])/(J*H))-((D*R[2])/H)+((S*R[5])/J)+acceleration[2])/(((K*B*R[2])/(J*H))+(2*(C*R[2])/H)+((K*R[5])/J)-R[8]));
+        //supprime la gravité
+        //FGlobal[2]=FGlobal[2];
+        //FGlobal[1]=((-S-FGlobal[2]*K)/J);
+        //FGlobal[0]=(FGlobal[1]*E+FGlobal[2]*F+acceleration[0]-acceleration[1])/I;
+
+
+        Log.i(TAG,"Acc lineaire: x: "+ linear_acceleration[0]+" ,y: "+linear_acceleration[1]+" z: "+linear_acceleration[2]);
+
+        Log.i(TAG,"Pour Globalx: angle x: "+ R[0]+" ,y: "+R[3]+" z: "+R[6]);
+
+        for(int i=0;i<R.length;i++)
+        {
+            if(R[i]<0.2)
+            {
+                R[i]=1;
+            }
+        }
+
+
+        FGlobal[0]=linear_acceleration[0]/R[0]+linear_acceleration[1]/R[1]+linear_acceleration[2]/R[2];
+        FGlobal[1]=linear_acceleration[0]/R[3]+linear_acceleration[1]/R[4]+linear_acceleration[2]/R[5];
+        FGlobal[2]=linear_acceleration[0]/R[6]+linear_acceleration[1]/R[7]+linear_acceleration[2]/R[8];
+
+
+        return FGlobal;
     }
 
 

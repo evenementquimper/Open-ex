@@ -11,6 +11,15 @@
         <ImageButton
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
+            android:id="@+id/init"
+            android:layout_gravity="top"
+            android:maxHeight="100dp"
+            android:maxWidth="100dp"
+            android:src="@drawable/ic_language_black_48dp"
+            />
+        <ImageButton
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
             android:id="@+id/stop"
             android:layout_gravity="top"
             android:maxHeight="100dp"
@@ -56,6 +65,7 @@
 
             />
     </TableRow>
+
     <com.example.adonniou.open_ex.MyGLSurfaceView android:id="@+id/glsurfaceview"
         android:layout_height="match_parent"
         android:layout_width="match_parent" />

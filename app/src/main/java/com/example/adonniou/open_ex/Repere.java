@@ -99,10 +99,10 @@ public class Repere {
         gl.glVertexPointer( // point to vertex data:
                 COORDS_PER_VERTEX,
                 GL10.GL_FLOAT, 0, vertexBuffer);
-        gl.glRotatef(mAngle[0],mAngle[0],mAngle[1],mAngle[2]);
-        gl.glDrawArrays(    // draw shape:
-                GL10.GL_LINES, 0,
-                RepereCoords.length / COORDS_PER_VERTEX);
+        gl.glRotatef(mAngle[0],mAngle[0],0.0f,0.0f);
+        //gl.glDrawArrays(    // draw shape:
+          //      GL10.GL_LINES, 0,
+            //    RepereCoords.length / COORDS_PER_VERTEX);
 
         gl.glDrawElements(GL10.GL_LINES,drawOrder.length, GL10.GL_UNSIGNED_SHORT,
                 drawListBuffer);
