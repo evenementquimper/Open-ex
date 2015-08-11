@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 The Android Open Source Project
+ * Copyright 2015 Mocap Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,10 @@
 
 package com.example.adonniou.open_ex;
 
+import android.app.AlertDialog;
 import android.app.FragmentTransaction;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.hardware.Sensor;
@@ -114,19 +116,96 @@ fa=super.getActivity();
         final MyGLSurfaceView GLView = (MyGLSurfaceView) layout.findViewById(R.id.glsurfaceview);
 
         final ImageButton mInitButton= (ImageButton) layout.findViewById(R.id.init);
+        final ImageButton mRefreshButton= (ImageButton) layout.findViewById(R.id.refresh);
         final ImageButton mStopButton= (ImageButton) layout.findViewById(R.id.stop);
         final ImageButton mStartButton= (ImageButton) layout.findViewById(R.id.start);
-        final ImageButton mCleanVerticesButton= (ImageButton) layout.findViewById(R.id.save_file);
+        final ImageButton mSaveButton= (ImageButton) layout.findViewById(R.id.save_file);
         final ImageButton mZommPlusButton= (ImageButton) layout.findViewById(R.id.zoomplus);
         final ImageButton mZommMoinsButton= (ImageButton) layout.findViewById(R.id.zoommoins);
+
+        mRefreshButton.setEnabled(false);
+        mRefreshButton.getDrawable().setAlpha(150);
+        mStopButton.setEnabled(false);
+        mStopButton.getDrawable().setAlpha(150);
+        mStartButton.setEnabled(false);
+        mStartButton.getDrawable().setAlpha(150);
+
+        mSaveButton.setEnabled(false);
+        mSaveButton.getDrawable().setAlpha(150);
+        mZommPlusButton.setEnabled(false);
+        mZommPlusButton.getDrawable().setAlpha(150);
+        mZommMoinsButton.setEnabled(false);
+        mZommMoinsButton.getDrawable().setAlpha(150);
+
+
 
         mInitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                LayoutInflater inflater = getActivity().getLayoutInflater();
+
+                final View alertDialogView = inflater.inflate(R.layout.login_dialog, null);
+                builder.setView(alertDialogView);
+                builder.setMessage(R.string.Init_phrase);
+                builder.setTitle(R.string.Init_titre);
+                builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+
+                        try {
+                            GLView.onInitGravity();
+                            Toast.makeText(getActivity(), "Init Gravity: ", Toast.LENGTH_SHORT).show();
+                            mStartButton.setEnabled(true);
+                            mStartButton.getDrawable().setAlpha(255);
+                            mZommMoinsButton.setEnabled(true);
+                            mZommMoinsButton.getDrawable().setAlpha(255);
+                            mZommPlusButton.setEnabled(true);
+                            mZommPlusButton.getDrawable().setAlpha(255);
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Toast.makeText(getActivity(), "Erreur save login: " + e, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+                builder.setNegativeButton(R.string.Annuler, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+
+                        try {
+
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Toast.makeText(getActivity(), "Erreur save login: " + e, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+                builder.show();
+//activation des sensors
+
+
+
+            }
+        });
+        mRefreshButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
 //activation des sensors
-                GLView.onInitGravity();
-                Toast.makeText(getActivity(), "Init Gravity: ", Toast.LENGTH_SHORT).show();
+                GLView.onRefresh();
+                Toast.makeText(getActivity(), "Refresh: ", Toast.LENGTH_SHORT).show();
+                mStartButton.setEnabled(true);
+                mStartButton.getDrawable().setAlpha(255);
+                mStopButton.setEnabled(false);
+                mStopButton.getDrawable().setAlpha(150);
+                mSaveButton.setEnabled(false);
+                mSaveButton.getDrawable().setAlpha(150);
+                mZommMoinsButton.setEnabled(true);
+                mZommMoinsButton.getDrawable().setAlpha(255);
+                mZommPlusButton.setEnabled(true);
+                mZommPlusButton.getDrawable().setAlpha(255);
+
+
             }
         });
 
@@ -136,6 +215,12 @@ fa=super.getActivity();
 
 //activation des sensors
                 GLView.onSensorsStart();
+                mStartButton.setEnabled(false);
+                mStartButton.getDrawable().setAlpha(150);
+                mStopButton.setEnabled(true);
+                mStopButton.getDrawable().setAlpha(255);
+                mInitButton.setEnabled(false);
+                mInitButton.getDrawable().setAlpha(150);
                 Toast.makeText(getActivity(), "Start: ", Toast.LENGTH_SHORT).show();
             }
         });
@@ -145,6 +230,16 @@ fa=super.getActivity();
             public void onClick(View v) {
 //pause des sensor
                 GLView.onSensorsPause();
+                mStartButton.setEnabled(true);
+                mStartButton.getDrawable().setAlpha(255);
+                mStopButton.setEnabled(false);
+                mStopButton.getDrawable().setAlpha(150);
+                mSaveButton.setEnabled(true);
+                mSaveButton.getDrawable().setAlpha(255);
+                mInitButton.setEnabled(true);
+                mInitButton.getDrawable().setAlpha(255);
+                mRefreshButton.setEnabled(true);
+                mRefreshButton.getDrawable().setAlpha(250);
 
                 Toast.makeText(getActivity(), "Stop: ", Toast.LENGTH_SHORT).show();
 
@@ -153,26 +248,26 @@ fa=super.getActivity();
                 //SaveOBJ(getActivity(),GLView);
           }
         });
-        mCleanVerticesButton.setOnClickListener(new View.OnClickListener() {
+        mSaveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 //pause des sensor
 
                 SaveOBJ(getActivity(), GLView);
-
-
+mSaveButton.setEnabled(false);
+mSaveButton.getDrawable().setAlpha(150);
+                mStopButton.setEnabled(false);
+                mStopButton.getDrawable().setAlpha(150);
                 //GLView.onNoVertices();
+                try {
+                    Intent sIntent = new Intent();
+                    sIntent = getActivity().getPackageManager().getLaunchIntentForPackage("File Manager");
+                    startActivity(sIntent);
+                } catch (Exception e) {
+                    Log.i(TAG, "Erreur save: "+e);
+                    e.printStackTrace();
+                }
 
-                Toast.makeText(getActivity(), "Refresh: ", Toast.LENGTH_SHORT).show();
-
-                //GLView.getRootView();
-                //GLView.clearFocus();
-                //GLView.clearAnimation();
-                //GLView.onResume();
-
-
-//enregistrer le fichier .obj
-                //SaveOBJ(getActivity(),GLView);
             }
         });
         mZommPlusButton.setOnClickListener(new View.OnClickListener() {
@@ -201,21 +296,22 @@ fa=super.getActivity();
 
 
     public void SaveOBJ(Context context, MyGLSurfaceView glview) {
+        Log.i(TAG, "DIR: ");
         float sVertices[] = glview.getsVertices();
         FileOutputStream fOut = null;
         OutputStreamWriter osw = null;
 
-        File mFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS),"mocap.obj");
+
+
+        File mFile;// = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS),"mocap.obj");
 
         // On crée un fichier qui correspond à l'emplacement extérieur
-
-
-
-
-        if(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
+//Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())
+        if(Environment.DIRECTORY_PICTURES!=null) {
             try {
+                mFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES ),"mocap.obj");
 
-                Log.i(TAG, "Documents dir: "+Environment.DIRECTORY_DOCUMENTS);
+                Log.i(TAG, "Documents dir: "+Environment.DIRECTORY_PICTURES );
                 fOut=new FileOutputStream(mFile);
                 osw = new OutputStreamWriter(fOut);
                 osw.write("# *.obj file (Generate by Mocap 3D)\n");
@@ -245,12 +341,12 @@ fa=super.getActivity();
                     osw.flush();
                 }
                 //popup surgissant pour le résultat
-                Toast.makeText(context, "Settings saved", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "Save : "+Environment.DIRECTORY_PICTURES+"/mocap.obj ", Toast.LENGTH_SHORT).show();
 
                 //lancement d'un explorateur de fichiers vers le fichier créer
                 //systeme des intend
                 try {
-                    File root = new File(Environment.DIRECTORY_DOCUMENTS);
+                    File root = new File(Environment.DIRECTORY_PICTURES);
                     Uri uri = Uri.fromFile(mFile);
 
                     Intent intent = new Intent();

@@ -16,8 +16,8 @@
             android:layout_width="wrap_content"
             android:id="@+id/lauchscan"
             android:layout_gravity="top"
-            android:maxHeight="100dp"
-            android:maxWidth="100dp"
+            android:maxHeight="65dp"
+            android:maxWidth="65dp"
             android:src="@drawable/ic_scan_launcher"
             android:onClick="Scan_ticket_fragment"
             />

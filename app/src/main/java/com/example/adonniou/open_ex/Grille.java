@@ -166,7 +166,7 @@ public class Grille {
      * @param gl - The OpenGL ES context in which to draw this shape.
      */
     public void draw(GL10 gl,float []mAngle) {
-                Log.i(TAG,"Angle grille: "+mAngle[1]);
+                //Log.i(TAG,"Angle grille: "+mAngle[1]);
         // Since this shape uses vertex arrays, enable them
         gl.glEnableClientState(GL10.GL_LINES);
         // draw the shape

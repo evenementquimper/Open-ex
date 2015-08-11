@@ -28,4 +28,6 @@
     <string name="Annuler">Annuler</string>
     <string name="Start_titre">Start</string>
     <string name="Stop_titre">Stop</string>
+    <string name="Init_titre">Initialisation</string>
+    <string name="Init_phrase">Veuillez poser votre appareil sur une surface horizontale</string>
 </resources>

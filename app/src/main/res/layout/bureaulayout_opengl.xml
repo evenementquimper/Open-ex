@@ -3,11 +3,18 @@
     android:layout_width="fill_parent" android:layout_height="fill_parent"
 
     >
-    <TableRow
-        android:orientation="vertical"
+    <ScrollView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:scrollbars="horizontal"
+        >
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
-        android:padding="4dp">
+        android:padding="4dp"
+        >
+
         <ImageButton
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
@@ -16,6 +23,17 @@
             android:maxHeight="100dp"
             android:maxWidth="100dp"
             android:src="@drawable/ic_language_black_48dp"
+
+            />
+        <ImageButton
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:id="@+id/refresh"
+            android:layout_gravity="top"
+            android:maxHeight="100dp"
+            android:maxWidth="100dp"
+            android:src="@drawable/ic_refresh_black_48dp"
+
             />
         <ImageButton
             android:layout_height="wrap_content"
@@ -64,8 +82,9 @@
             android:src="@drawable/ic_zoom_out_black_24dp"
 
             />
-    </TableRow>
 
+    </LinearLayout>
+    </ScrollView>
     <com.example.adonniou.open_ex.MyGLSurfaceView android:id="@+id/glsurfaceview"
         android:layout_height="match_parent"
         android:layout_width="match_parent" />
