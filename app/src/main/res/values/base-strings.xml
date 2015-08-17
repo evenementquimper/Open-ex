@@ -15,8 +15,8 @@
  limitations under the License.
 -->
 <resources>
-    <string name="app_name">MoCap</string>
-    <string name="intro_message">
+    <string name="app_name" translatable="false">MoCap</string>
+    <string name="intro_message" translatable="false">
         <![CDATA[
         
             

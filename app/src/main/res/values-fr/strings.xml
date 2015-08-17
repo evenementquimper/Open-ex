@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="Annuler">Annuler</string>
+    <string name="Init_phrase">Veuillez poser votre appareil sur une surface horizontale</string>
+    <string name="Init_titre">Initialisation</string>
+    <string name="Start_titre">Start</string>
+    <string name="Stop_titre">Stop</string>
+    <string name="clear_text">Quitter</string>
+    <string name="connection_error">Erreur de connection</string>
+    <string name="fetch_text">Envoyer</string>
+    <string name="login_text">Login</string>
+    <string name="sav_log">Se souvenir de moi</string>
+    <string name="welcome_message">Bonjour, clic sur envoyer pour lancer une requete Http</string>
+    <string name="save_valid">Sauvegarde fichier:/pictures/mocap.obj</string>
+</resources>

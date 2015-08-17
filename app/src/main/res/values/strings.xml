@@ -20,14 +20,15 @@
     <string name="fetch_text">Envoyer</string>
     <string name="clear_text">Quitter</string>
     <string name="connection_error">Connection error.</string>
-    <string name="eve_android_text">eve-android</string>
-    <string name="motion_control_text">Motion-control</string>
-    <string name="e_control_text">e-control</string>
+    <string name="eve_android_text" translatable="false">eve-android</string>
+    <string name="motion_control_text" translatable="false">Motion-control</string>
+    <string name="e_control_text" translatable="false">e-control</string>
     <string name="sav_log">Se souvenir de moi</string>
-    <string name="ok">Ok</string>
+    <string name="ok" translatable="false">Ok</string>
     <string name="Annuler">Annuler</string>
     <string name="Start_titre">Start</string>
     <string name="Stop_titre">Stop</string>
     <string name="Init_titre">Initialisation</string>
     <string name="Init_phrase">Veuillez poser votre appareil sur une surface horizontale</string>
+    <string name="save_valid">Sauvegarde fichier: /pictures/mocap.obj</string>
 </resources>
